@@ -1,0 +1,28 @@
+name: Rebuild Hugging Face Space
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */2 * * *'  # Rebuild every 2 hours
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone your GitHub repo
+        uses: actions/checkout@v3
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git clone https://That6rov:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_NAME} hf-space
+          rsync -av --exclude='.git' ./ hf-space/
+          cd hf-space
+          echo "Updated at $(TZ='America/New_York' date)" > timestamp.txt
+          git add .
+          git commit -am "🔁 Auto sync from GitHub on $(date)"
+          git push
