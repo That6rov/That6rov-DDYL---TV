@@ -19,10 +19,21 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+
+          echo "🔁 Cloning Hugging Face space..."
           git clone https://That6rov:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_NAME} hf-space
-          rsync -av --exclude='.git' ./ hf-space/
+
+          echo "🔁 Syncing safe files to space..."
+          rsync -av \
+            --exclude='.git' \
+            --exclude='epgs/*.xml' \
+            --exclude='epgs/*.gz' \
+            --exclude='*.m3u8' \
+            --exclude='proxy.so' \
+            ./ hf-space/
+
           cd hf-space
           echo "Updated at $(TZ='America/New_York' date)" > timestamp.txt
           git add .
-          git commit -am "🔁 Auto sync from GitHub on $(date)"
+          git commit -am "🔁 Auto sync from GitHub on $(date)" || echo "No changes to commit."
           git push
